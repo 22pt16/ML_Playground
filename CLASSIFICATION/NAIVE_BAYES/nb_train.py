@@ -69,7 +69,7 @@ nb.train_model(good_emails, spam_emails)
 likelihood_table = nb.calculate_likelihood()
 
 # Save model and likelihood table as .pkl
-with open('Saved_modelsnaive_bayes_model.pkl', 'wb') as model_file:
+with open('Saved_models/naive_bayes_model.pkl', 'wb') as model_file:
     pickle.dump({'model': nb, 'likelihood_table': likelihood_table}, model_file)
 
 print("Naive Bayes model saved successfully.")
