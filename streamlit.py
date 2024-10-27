@@ -89,80 +89,69 @@ elif model_type == "Regression":
         "Gradient Boosting (Regression)"
     ])
     # Placeholder for regression logic (to be implemented later)
+   
+
     if regression_method == "Decision Tree Regression":
         DATA_PATH = 'Datasets/SydneyHousePrices.csv'
         from REGRESSION.DECISION_TREE.dtr_train import train_decision_tree_model, meta_data, handle_unknown
         from REGRESSION.DECISION_TREE.dtr_test import test_decision_tree_model
-        
-        #SELECT DATASET 
-        feature_columns ,target_column = meta_data(1)   #as of now 1.SydneyHouseprices
-        
-        
+
+        # SELECT DATASET 
+        feature_columns, target_column = meta_data(1)  # as of now 1.SydneyHouseprices
+
         # Input hyperparameters for Decision Tree Regressor
         max_depth = st.slider("Max Depth of the Tree", min_value=1, max_value=50, value=10)
         min_samples_split = st.slider("Min Samples Split", min_value=2, max_value=10, value=2)
         min_samples_leaf = st.slider("Min Samples per Leaf", min_value=1, max_value=10, value=1)
 
-
         # Train the Decision Tree Regressor model
         if st.button("Train Decision Tree Model"):
-            test_x, test_y, message = train_decision_tree_model(
+            test_x, test_y, mse, mae, r2, unique_suburbs, unique_postal_codes, unique_prop_types, \
+            (min_bed, max_bed), (min_bath, max_bath), (min_car, max_car), message = train_decision_tree_model(
                 DATA_PATH, target_column, max_depth, min_samples_split, min_samples_leaf)
             st.success(message)
 
-        # # Evaluate the trained model
-        # if st.button("Evaluate Model"):
-            mae, mse, r2, predictions = test_decision_tree_model(test_x, test_y)
-
-            # Display performance metrics
+            # Display evaluation metrics
             st.write(f"Mean Absolute Error (MAE): {mae:.4f}")
             st.write(f"Mean Squared Error (MSE): {mse:.4f}")
             st.write(f"R² Score: {r2:.4f}")
-            
 
-           
+            # Save unique values and range limits to session state
+            st.session_state.unique_suburbs = unique_suburbs
+            st.session_state.unique_postal_codes = unique_postal_codes
+            st.session_state.unique_prop_types = unique_prop_types
+            st.session_state.min_bed, st.session_state.max_bed = min_bed, max_bed
+            st.session_state.min_bath, st.session_state.max_bath = min_bath, max_bath
+            st.session_state.min_car, st.session_state.max_car = min_car, max_car
 
-        # Section to accept custom input for testing
-        st.subheader("Test the model with custom input")
+        # Check if unique values and range limits are available in session state
+        if 'unique_suburbs' in st.session_state:
+            # Display input sliders and dropdowns for prediction input
+            st.subheader("Test the model with custom input")
+            user_input = {
+                'suburb': st.selectbox("Select Suburb", st.session_state.unique_suburbs),
+                'postalCode': st.selectbox("Select Postal Code", st.session_state.unique_postal_codes),
+                'propType': st.selectbox("Select Property Type", st.session_state.unique_prop_types),
+                "bed": st.slider("Number of Bedrooms", min_value=st.session_state.min_bed, max_value=st.session_state.max_bed, value=st.session_state.min_bed, step = 1),
+                "bath": st.slider("Number of Bathrooms", min_value=st.session_state.min_bath, max_value=st.session_state.max_bath, value=st.session_state.min_bath, step=1),
+                "car": st.slider("Number of Car Spaces", min_value=st.session_state.min_car, max_value=st.session_state.max_car, value=st.session_state.min_car,step = 1)
+            }
 
-        #NOTE: add datas from meta_Data file later
-        #Get unknowns from metadata
-        # user_input={}
-        # for i in unknowns:
-        #     user_input[i] = None
+            if st.button("Predict with Custom Input"):
+                # Load model once
+                MODEL_PATH = 'Saved_models/decision_tree_regressor.pkl'
+                with open(MODEL_PATH, 'rb') as model_file:
+                    decision_tree_model = pickle.load(model_file)
 
-        # for i in feature_columns:   
-        #     user_input[i] = st.number_input(f"i", min_value=metadata[i][1], max_value=metadata[i][2], value=metadata[i][1]),
-        
-        user_input = {
-            "Id": None,
-            'suburb': None,
-            'postalCode': None,
-            'propType': None,
-            "bed": st.number_input("Number of Bedrooms", min_value=1, max_value=7, value=1),
-            "bath": st.number_input("Number of Bathrooms",min_value=1, max_value=5, value=1),
-            "car": st.number_input("Number of Car Spaces",min_value=1, max_value=5, value=1)
-        }
-       
+                # Handle unknown inputs by default values
+                # crct_input = handle_unknown(1, modes, user_input)
+                input_df = pd.DataFrame([user_input])
+                if target_column in input_df.columns:
+                    input_df = input_df.drop(columns=[target_column])
 
-        if st.button("Predict with Custom Input"):
-           
-            
-            MODEL_PATH = 'Saved_models/decision_tree_regressor.pkl'
-            with open(MODEL_PATH, 'rb') as model_file:
-                decision_tree_model = pickle.load(model_file)
-                 
-            with open('Saved_models/modes.pkl', 'rb') as mode_file:
-                modes = pickle.load(mode_file)   
-
-             #Handling unknown by default values
-            crct_input = handle_unknown(1, modes, user_input)
-            input_df = pd.DataFrame([crct_input])
-            # Predict the target variable using the crct user input
-            prediction = decision_tree_model.predict(input_df)
-            st.write(f"Predicted: ${prediction[0]:.3f}")
-            print(input_df)
-            print(f"Predicted: ${prediction[0]:.3f}")
+                # Predict the target variable using the corrected user input
+                prediction = decision_tree_model.predict(input_df)
+                st.write(f"Predicted: ${prediction[0]:.3f}")
 
 elif model_type == "Clustering":
     # Dropdown for clustering methods
