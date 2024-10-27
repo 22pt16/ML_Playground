@@ -1,10 +1,15 @@
 DATASET_CONFIG = {
     "Sydney House Prices": {
         "path": "Datasets/SydneyHousePrices.csv",
-        "target": "sellPrice"
-        "feature":  ["bed",min, max],
-                    ["bath",min, max],
-                    ["car",min, max]
+        "target": "sellPrice",
+        "cat_feature":  #Categorical features
+                    [suburb],
+                    [postalCode],
+                    [propType],
+        "num_feature":  #Numerical Features
+                    ["bed",1, 5],
+                    ["bath",1, 5],
+                    ["car",1, 5]
     },
     
     # Add more datasets here
