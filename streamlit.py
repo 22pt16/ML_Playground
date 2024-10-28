@@ -221,7 +221,7 @@ elif model_type == "Clustering":
     # Dropdown for clustering methods
     clustering_method = st.selectbox("Select Clustering Method", [
         "K-Means Clustering", 
-        "Hierarchical Clustering", 
+        "DBSCAN Clustering", 
         "K-Medoids Clustering", 
         "Spectral Clustering"
     ])
@@ -279,6 +279,51 @@ elif model_type == "Clustering":
                 ax.add_artist(legend1)
                 ax.legend()
                 st.pyplot(fig)
-                    
-    # Placeholder for clustering logic (to be implemented later)
+
+    elif clustering_method == "DBSCAN Clustering" :
+        from CLUSTERING.DBSCAN.dbscan_train import train_dbscan
+        from CLUSTERING.DBSCAN.dbscan_test import predict_cluster              
+
+        # User inputs for data generation
+        shape = st.selectbox("Select Data Shape", ["blobs", "moons", "circles"])
+        n_samples = st.number_input("Number of Samples", min_value=10, max_value=1000, value=100)
+        noise = st.number_input("Noise Level", min_value=0.0, max_value=1.0, value=0.1, step=0.01)
+
+        # Hyperparameters for DBSCAN
+        eps = st.number_input("Epsilon (eps)", min_value=0.01, max_value=5.0, value=0.5, step=0.01)
+        min_samples = st.slider("Minimum Samples", min_value=1, max_value=50, value=5)
+
+        if st.button("Train DBSCAN Model"):
+            message, silhouette, data_pca, labels = train_dbscan(shape=shape, n_samples=n_samples, eps=eps, min_samples=min_samples, noise=noise)
+            st.success(message)
+
+            # Display training plot
+            st.image('Saved_models/dbscan_plot.png')
+
+            # Store data_pca and labels in session state
+            st.session_state.data_pca = data_pca
+            st.session_state.labels = labels
+
+        # Prediction input
+        if 'data_pca' in st.session_state:
+            st.subheader("Predict Cluster for New Data")
+
+            # User input for new data point
+            feature1 = st.number_input("Feature 1", value=0.0)
+            feature2 = st.number_input("Feature 2", value=0.0)
+
+            if st.button("Predict Cluster"):
+                new_data = [feature1, feature2]
+                cluster = predict_cluster(new_data)
+                st.write(f"Predicted Cluster: {cluster}")
+
+                # Plot prediction point on the existing data scatter plot
+                fig, ax = plt.subplots()
+                scatter = ax.scatter(st.session_state.data_pca[:, 0], st.session_state.data_pca[:, 1], c=st.session_state.labels, cmap='viridis')
+                ax.scatter(new_data[0], new_data[1], color='red', label="Prediction", s=100, edgecolor="black")
+                legend1 = ax.legend(*scatter.legend_elements(), title="Clusters")
+                ax.add_artist(legend1)
+                ax.legend()
+                st.pyplot(fig)
+            # Placeholder for clustering logic (to be implemented later)
 
