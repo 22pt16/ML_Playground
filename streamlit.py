@@ -94,7 +94,6 @@ if model_type == "Classification":
         "KNN",  # Added KNN to the classification methods
         "Neural Network", 
         "SVM", 
-        "Random Forest", 
         "Decision Tree Classifier", 
         "Gradient Boosting", 
         "Mixture of Gaussians"
@@ -338,6 +337,7 @@ elif model_type == "Clustering":
         "K-Means Clustering", 
         "DBSCAN Clustering", 
         "K-Medoids Clustering", 
+        "PCA",
         "Spectral Clustering"
     ])
 
@@ -500,3 +500,61 @@ elif model_type == "Clustering":
                 st.pyplot(fig)
             else:
                 st.write("Please train the clustering model first by clicking 'Train and Visualize Clustering'.")
+    elif clustering_method == "PCA":
+        from CLUSTERING.PCA.pca_train import generate_synthetic_data, train_pca_kmeans, load_models, pca_from_scratch
+
+                # Sidebar for parameters
+        st.sidebar.header("Parameters")
+        n_samples = st.sidebar.slider("Number of Samples", 100, 2000, 1000)
+        n_features = st.sidebar.slider("Number of Features", 2, 20, 10)
+        n_clusters = st.sidebar.slider("Number of Clusters", 2, 10, 3)
+        n_components = st.sidebar.slider("PCA Components", 2, n_features, 2)
+
+        # Generate and train model on button click
+        if st.button("Train Model"):
+            X, y = generate_synthetic_data(n_samples=n_samples, n_features=n_features, n_clusters=n_clusters)
+            labels, X_reduced, silhouette = train_pca_kmeans(X, n_clusters=n_clusters, n_components=n_components)
+            
+            st.write(f"Silhouette Score: {silhouette:.2f}")
+            
+            # Store training data for visualization with test data later
+            st.session_state['X_reduced'] = X_reduced
+            st.session_state['labels'] = labels
+            
+            # Visualize the PCA-reduced data
+            fig, ax = plt.subplots()
+            scatter = ax.scatter(X_reduced[:, 0], X_reduced[:, 1], c=labels, cmap='viridis', label="Training Data")
+            ax.set_title("PCA-Reduced Data and Clusters (Train Set)")
+            ax.set_xlabel("Principal Component 1")
+            ax.set_ylabel("Principal Component 2")
+            st.pyplot(fig)
+
+        # Test new data point
+        st.header("Test Model with New Data Point")
+        feature_values = [st.number_input(f"Feature {i+1}", value=0.0) for i in range(n_features)]
+
+        if st.button("Classify New Data Point"):
+            eigenvector_subset, mean_vector, kmeans = load_models()
+            
+            # PCA from scratch on new data point using training mean vector
+            new_point = np.array([feature_values])
+            new_point_meaned = new_point - mean_vector  # Use training mean vector
+            new_point_reduced = np.dot(new_point_meaned, eigenvector_subset)
+            predicted_cluster = kmeans.predict(new_point_reduced)[0]
+            
+            st.write(f"The new data point belongs to cluster: {predicted_cluster}")
+            st.write(f"PCA-Reduced Coordinates: {new_point_reduced[0]}")
+
+            # Visualize the new data point along with training data
+            fig, ax = plt.subplots()
+            # Plot the training data
+            scatter = ax.scatter(st.session_state['X_reduced'][:, 0], st.session_state['X_reduced'][:, 1], 
+                                c=st.session_state['labels'], cmap='viridis', label="Training Data")
+            
+            # Plot the new test data point
+            ax.scatter(new_point_reduced[0, 0], new_point_reduced[0, 1], c="red", s=100, label="Test Data Point", marker="x")
+            ax.set_title("PCA-Reduced Data with New Data Point (Test)")
+            ax.set_xlabel("Principal Component 1")
+            ax.set_ylabel("Principal Component 2")
+            ax.legend()
+            st.pyplot(fig)
