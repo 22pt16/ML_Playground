@@ -303,11 +303,11 @@ elif model_type == "Clustering":
         
 
         if st.button("Train K-Medoids Model"):
-            message, silhouette, data_pca, labels = train_kmedoids(shape=shape, n_samples=n_samples, eps=eps, min_samples=min_samples, noise=noise)
+            message, silhouette, data_pca, labels = train_kmedoids( n_clusters, max_iter, metric)
             st.success(message)
 
-            # Display training plot
-            st.image('Saved_models/kmedoids_plot.png')
+            
+           
 
             # Store data_pca and labels in session state
             st.session_state.data_pca = data_pca
