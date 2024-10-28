@@ -58,5 +58,4 @@ def train_multiple_regression_model(data_path, target_column):
     with open('Saved_models/multiple_regression_model.pkl', 'wb') as model_file:
         pickle.dump(model, model_file)
 
-    return test_x, test_y, mse, mae, r2, "Model trained successfully!"
-
+    return test_x, test_y, model, mse, mae, r2, "Model trained successfully!"

@@ -4,7 +4,12 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
+# Handle unknown data
 
+def train_svm():
+    from CLASSIFICATION.SVM.svm_train import train_model  # Import your training function
+    msg = train_model()  # Train and save model
+    return msg
 #1.NAIVE BAYES
 # Load the training datasets
 def load_emails():
@@ -101,14 +106,48 @@ if model_type == "Classification":
             st.success(message)
 
     # Input area for testing
-    email_input = st.text_area("Enter email text for classification:")
-    result_placeholder = st.empty()
-    if st.button("Test Naive Bayes Model"):
-        if email_input:  # Check if input is provided
-            result = validate_email(email_input)  # Classify the email
-            result_placeholder.text_area("Classification Result:", result, height=150)  # Display result
-        else:
-            st.error("Please enter an email to classify.")  # Error if input is empty
+        email_input = st.text_area("Enter email text for classification:")
+        result_placeholder = st.empty()
+        if st.button("Test Naive Bayes Model"):
+            if email_input:  # Check if input is provided
+                result = validate_email(email_input)  # Classify the email
+                result_placeholder.text_area("Classification Result:", result, height=150)  # Display result
+            else:
+                st.error("Please enter an email to classify.")  # Error if input is empty
+    if classification_method == "SVM":
+        if st.button("Train Iris SVM Model"):
+            msg = train_svm()
+            st.success(msg)
+
+        st.subheader("Iris Data Prediction")
+
+        sepal_length = st.number_input("Sepal Length", min_value=0.0, max_value=10.0, value=5.0)
+        sepal_width = st.number_input("Sepal Width", min_value=0.0, max_value=10.0, value=3.0)
+        petal_length = st.number_input("Petal Length", min_value=0.0, max_value=10.0, value=4.0)
+        petal_width = st.number_input("Petal Width", min_value=0.0, max_value=10.0, value=1.0)
+
+        if st.button("Classify"):
+            input_data = np.array([[sepal_length, sepal_width, petal_length, petal_width]])
+            from CLASSIFICATION.SVM.svm_test import predict_model
+            prediction = predict_model(input_data)
+            st.write("Prediction:", prediction)
+    elif classification_method == "KNN":
+        if st.button("Train KNN Model"):
+            message = train_knn()
+            st.success(message)
+
+        # Input area for testing KNN
+        st.subheader("Test KNN Model")
+        sepal_length = st.number_input("Sepal Length", min_value=0.0, max_value=10.0, value=5.0)
+        sepal_width = st.number_input("Sepal Width", min_value=0.0, max_value=10.0, value=3.0)
+        petal_length = st.number_input("Petal Length", min_value=0.0, max_value=10.0, value=4.0)
+        petal_width = st.number_input("Petal Width", min_value=0.0, max_value=10.0, value=1.5)
+
+        if st.button("Test KNN Model"):
+            prediction = validate_knn(sepal_length, sepal_width, petal_length, petal_width)
+            st.write(f"Predicted Species: {prediction}")
+        
+    # Placeholder for other classification methods (to be implemented later)
 
 elif model_type == "Regression":
     # Dropdown for regression methods
@@ -121,15 +160,23 @@ elif model_type == "Regression":
     ])
 
     if regression_method == "Multiple Regression":
-        DATA_PATH = 'Datasets/Students_Performance.csv'  # Adjust the path to your dataset
+       
         from REGRESSION.MULTIPLEREGRESSION.mr_train import train_multiple_regression_model
-        from REGRESSION.MULTIPLEREGRESSION.mr_test import test_multiple_regression_model
 
+        DATA_PATH = 'Datasets/Students_Performance.csv'  
         target_column = 'Performance Index'  # Adjust to your actual target column
+
+        # Initialize a session state variable to track model training
+        if 'model_trained' not in st.session_state:
+            st.session_state.model_trained = False
+            st.session_state.test_x = None
+            st.session_state.test_y = None
+            st.session_state.model = None
 
         # Train the Multiple Regression model
         if st.button("Train Multiple Regression Model"):
-            test_x, test_y, mse, mae, r2, message = train_multiple_regression_model(DATA_PATH, target_column)
+            print("Training the model")
+            test_x, test_y, model, mse, mae, r2, message = train_multiple_regression_model(DATA_PATH, target_column)
             st.success(message)
 
             # Display evaluation metrics
@@ -137,31 +184,31 @@ elif model_type == "Regression":
             st.write(f"Mean Squared Error (MSE): {mse:.4f}")
             st.write(f"R² Score: {r2:.4f}")
 
-            # Save unique values and range limits to session state
-            st.session_state.test_x = test_x
-            st.session_state.test_y = test_y
-
-        # Check if unique values and range limits are available in session state if 'test_x' in st.session_state:
+        # Check if the model is trained
+        if 'test_x' in locals () and 'test_y' in locals():
             # Display input sliders and dropdowns for prediction input
             st.subheader("Test the model with custom input")
             user_input = {
-                'feature1': st.slider("Feature 1", min_value=0, max_value=100, value=50, step=1),
-                'feature2': st.slider("Feature 2", min_value=0, max_value=100, value=50, step=1),
-                # Add more features as needed
+                'Hours Studied': st.slider("Hours Studied", min_value=0, max_value=100, value=50, step=1),
+                'Previous Scores': st.slider("Previous Scores", min_value=0, max_value=100, value=50, step=1),
+                'Extracurricular Activities': st.selectbox("Extracurricular Activities", ["Yes", "No"]),
+                'Sleep Hours': st.slider("Sleep Hours", min_value=0, max_value=24, value=8, step=1),
+                'Sample Question Papers Practiced': st.slider("Sample Question Papers Practiced", min_value=0, max_value=10, value=1, step=1)
             }
 
             if st.button("Predict with Custom Input"):
-                # Load model once
-                MODEL_PATH = 'Saved_models/multiple_regression_model.pkl'
-                with open(MODEL_PATH, 'rb') as model_file:
-                    multiple_regression_model = pickle.load(model_file)
+                # Load model from session state
+                multiple_regression_model = st.session_state.model
 
-                # Handle unknown inputs by default values
+                # Convert user input into DataFrame
                 input_df = pd.DataFrame([user_input])
+
+                # Encode categorical features (make sure to match the preprocessing done during training)
+                input_df['Extracurricular Activities'] = input_df['Extracurricular Activities'].map({"Yes": 1, "No": 0})
 
                 # Predict the target variable using the corrected user input
                 prediction = multiple_regression_model.predict(input_df)
-                st.write(f"Predicted: {prediction[0]:.3f}")
+                st.write(f"Predicted Performance Index: {prediction[0]:.3f}")
 
     elif regression_method == "Decision Tree Regression":
         DATA_PATH = 'Datasets/SydneyHousePrices.csv'
@@ -247,45 +294,57 @@ elif model_type == "Clustering":
     if clustering_method == "K-Medoids Clustering":
 
         from CLUSTERING.K_MEDOIDS.k_med_train import train_kmedoids
-        from CLUSTERING.K_MEDOIDS.k_med_test import predict_cluster              
+        from CLUSTERING.K_MEDOIDS.k_med_test import predict_cluster      
+        # Hyperparameters
+        n_clusters = st.slider("Number of Clusters", min_value=2, max_value=10, value=3)
+        max_iter = st.number_input("Max Iterations", min_value=100, max_value=500, value=300)
+        metric = st.selectbox("Distance Metric", ["euclidean"])
 
-        # User inputs for data generation
-        shape = st.selectbox("Select Data Shape", ["blobs", "moons", "circles"])
-        n_samples = st.number_input("Number of Samples", min_value=10, max_value=1000, value=100)
-        noise = st.number_input("Noise Level", min_value=0.0, max_value=1.0, value=0.1, step=0.01)
-
-        # Hyperparameters for DBSCAN
-        eps = st.number_input("Epsilon (eps)", min_value=0.01, max_value=5.0, value=0.5, step=0.01)
-        min_samples = st.slider("Minimum Samples", min_value=1, max_value=50, value=5)
+        
 
         if st.button("Train K-Medoids Model"):
-            message, silhouette, data_pca, labels = train_kmedoids(shape=shape, n_samples=n_samples, eps=eps, min_samples=min_samples, noise=noise)
+            message, silhouette, data_pca, labels = train_kmedoids( n_clusters, max_iter, metric)
             st.success(message)
 
-            # Display training plot
-            st.image('Saved_models/kmedoids_plot.png')
+            
+           
 
             # Store data_pca and labels in session state
             st.session_state.data_pca = data_pca
             st.session_state.labels = labels
 
+            # Plot training data
+            fig, ax = plt.subplots()
+            scatter = ax.scatter(data_pca[:, 0], data_pca[:, 1], c=labels, cmap='viridis')
+            legend1 = ax.legend(*scatter.legend_elements(), title="Clusters")
+            ax.add_artist(legend1)
+            st.pyplot(fig)
+
         # Prediction input
         if 'data_pca' in st.session_state:
             st.subheader("Predict Cluster for New Data")
 
-            # User input for new data point
-            feature1 = st.number_input("Feature 1", value=0.0)
-            feature2 = st.number_input("Feature 2", value=0.0)
+            data_pca = st.session_state.data_pca
+            labels = st.session_state.labels
+
+            pca_min = np.min(data_pca, axis=0)
+            pca_max = np.max(data_pca, axis=0)
+
+            gdp_input = st.number_input("GDP per Capita", min_value=float(pca_min[0]), max_value=float(pca_max[0]), step=0.01)
+            social_support_input = st.number_input("Social Support", min_value=float(pca_min[1]), max_value=float(pca_max[1]), step=0.01)
+            life_expectancy = st.number_input("Life Expectancy", min_value=float(0.10), max_value=float(1.10), step=0.01)
+            Freedom_of_choices = st.number_input("Freedom to make Life choices", min_value=float(0.01), max_value=float(0.60), step=0.01)
 
             if st.button("Predict Cluster"):
-                new_data = [feature1, feature2]
+                new_data = [gdp_input, social_support_input, life_expectancy, Freedom_of_choices]
                 cluster = predict_cluster(new_data)
                 st.write(f"Predicted Cluster: {cluster}")
 
+        
                 # Plot prediction point on the existing data scatter plot
                 fig, ax = plt.subplots()
-                scatter = ax.scatter(st.session_state.data_pca[:, 0], st.session_state.data_pca[:, 1], c=st.session_state.labels, cmap='viridis')
-                ax.scatter(new_data[0], new_data[1], color='red', label="Prediction", s=100, edgecolor="black")
+                scatter = ax.scatter(data_pca[:, 0], data_pca[:, 1], c=labels, cmap='viridis')
+                ax.scatter([new_data[0]], [new_data[1]], color='red', label="Prediction", s=100, edgecolor="black")
                 legend1 = ax.legend(*scatter.legend_elements(), title="Clusters")
                 ax.add_artist(legend1)
                 ax.legend()
