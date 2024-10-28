@@ -93,8 +93,8 @@ elif model_type == "Regression":
     # Placeholder for regression logic (to be implemented later)
     if regression_method == "Multiple Regression":
         DATA_PATH = 'Datasets/Students_Performance.csv'  # Adjust the path to your dataset
-        from REGRESSION.DECISION_TREE.MULTIPLEREGRESSION.mr_train import train_multiple_regression_model
-        from REGRESSION.DECISION_TREE.MULTIPLEREGRESSION.mr_test import test_multiple_regression_model
+        from REGRESSION.MULTIPLEREGRESSION.mr_train import train_multiple_regression_model
+        from REGRESSION.MULTIPLEREGRESSION.mr_test import test_multiple_regression_model
 
         target_column = 'Performance Index'  # Adjust to your actual target column
 
