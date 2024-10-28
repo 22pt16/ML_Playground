@@ -83,6 +83,7 @@ if model_type == "Classification":
                 result_placeholder.text_area("Classification Result:", result, height=150)  # Display result
             else:
                 st.error("Please enter an email to classify.")  # Error if input is empty
+
     if classification_method == "SVM":
         if st.button("Train Iris SVM Model"):
             msg = train_svm()
@@ -114,15 +115,23 @@ elif model_type == "Regression":
    
 
     if regression_method == "Multiple Regression":
-        DATA_PATH = 'Datasets/Students_Performance.csv'  # Adjust the path to your dataset
+       
         from REGRESSION.MULTIPLEREGRESSION.mr_train import train_multiple_regression_model
-        from REGRESSION.MULTIPLEREGRESSION.mr_test import test_multiple_regression_model
 
+        DATA_PATH = 'Datasets/Students_Performance.csv'  
         target_column = 'Performance Index'  # Adjust to your actual target column
+
+        # Initialize a session state variable to track model training
+        if 'model_trained' not in st.session_state:
+            st.session_state.model_trained = False
+            st.session_state.test_x = None
+            st.session_state.test_y = None
+            st.session_state.model = None
 
         # Train the Multiple Regression model
         if st.button("Train Multiple Regression Model"):
-            test_x, test_y, mse, mae, r2, message = train_multiple_regression_model(DATA_PATH, target_column)
+            print("Training the model")
+            test_x, test_y, model, mse, mae, r2, message = train_multiple_regression_model(DATA_PATH, target_column)
             st.success(message)
 
             # Display evaluation metrics
@@ -131,27 +140,30 @@ elif model_type == "Regression":
             st.write(f"R² Score: {r2:.4f}")
 
         # Check if the model is trained
-        if 'test_x' in locals () and 'test_y' in locals():
-            # Display input sliders and dropdowns for prediction input
+        if 'test_x' in locals() and 'test_y' in locals():
+        # Display input sliders and dropdowns for prediction input
             st.subheader("Test the model with custom input")
             user_input = {
-                'feature1': st.slider("Feature 1", min_value=0, max_value=100, value=50, step=1),
-                'feature2': st.slider("Feature 2", min_value=0, max_value=100, value=50, step=1),
-                # Add more features as needed
+                'Hours Studied': st.slider("Hours Studied", min_value=0, max_value=100, value=50, step=1),
+                'Previous Scores': st.slider("Previous Scores", min_value=0, max_value=100, value=50, step=1),
+                'Extracurricular Activities': st.selectbox("Extracurricular Activities", ["Yes", "No"]),
+                'Sleep Hours': st.slider("Sleep Hours", min_value=0, max_value=24, value=8, step=1),
+                'Sample Question Papers Practiced': st.slider("Sample Question Papers Practiced", min_value=0, max_value=10, value=1, step=1)
             }
 
             if st.button("Predict with Custom Input"):
-                # Load model once
-                MODEL_PATH = 'Saved_models/multiple_regression_model.pkl'
-                with open(MODEL_PATH, 'rb') as model_file:
-                    multiple_regression_model = pickle.load(model_file)
+                # Load model from session state
+                multiple_regression_model = st.session_state.model
 
-                # Handle unknown inputs by default values
+                # Convert user input into DataFrame
                 input_df = pd.DataFrame([user_input])
+
+                # Encode categorical features (make sure to match the preprocessing done during training)
+                input_df['Extracurricular Activities'] = input_df['Extracurricular Activities'].map({"Yes": 1, "No": 0})
 
                 # Predict the target variable using the corrected user input
                 prediction = multiple_regression_model.predict(input_df)
-                st.write(f"Predicted: {prediction[0]:.3f}")
+                st.write(f"Predicted Performance Index: {prediction[0]:.3f}")
 
     elif regression_method == "Decision Tree Regression":
         DATA_PATH = 'Datasets/SydneyHousePrices.csv'
