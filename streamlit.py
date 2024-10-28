@@ -4,6 +4,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
+# Handle unknown data
 
 def train_svm():
     from CLASSIFICATION.SVM.svm_train import train_model  # Import your training function
@@ -130,6 +131,23 @@ if model_type == "Classification":
             from CLASSIFICATION.SVM.svm_test import predict_model
             prediction = predict_model(input_data)
             st.write("Prediction:", prediction)
+    elif classification_method == "KNN":
+        if st.button("Train KNN Model"):
+            message = train_knn()
+            st.success(message)
+
+        # Input area for testing KNN
+        st.subheader("Test KNN Model")
+        sepal_length = st.number_input("Sepal Length", min_value=0.0, max_value=10.0, value=5.0)
+        sepal_width = st.number_input("Sepal Width", min_value=0.0, max_value=10.0, value=3.0)
+        petal_length = st.number_input("Petal Length", min_value=0.0, max_value=10.0, value=4.0)
+        petal_width = st.number_input("Petal Width", min_value=0.0, max_value=10.0, value=1.5)
+
+        if st.button("Test KNN Model"):
+            prediction = validate_knn(sepal_length, sepal_width, petal_length, petal_width)
+            st.write(f"Predicted Species: {prediction}")
+        
+    # Placeholder for other classification methods (to be implemented later)
 
 elif model_type == "Regression":
     # Dropdown for regression methods
