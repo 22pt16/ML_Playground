@@ -3,10 +3,10 @@ import pickle
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-    #handle unknown data
 
+# Handle unknown data
 
-#1.NAIVE BAYES
+# 1. NAIVE BAYES
 # Load the training datasets
 def load_emails():
     GOOD_EMAILS_PATH = 'Datasets/good_emails.txt'
@@ -46,6 +46,36 @@ def validate_email(email):
     result = model.classify_email(email)
     return result
 
+# KNN Functions
+def load_iris_data():
+    DATA_PATH = 'Datasets/IRIS.csv'
+    data = pd.read_csv(DATA_PATH)
+    X = data.drop('species', axis=1)
+    y = data['species']
+    return X, y
+
+def train_knn():
+    MODEL_PATH = 'Saved_models/knn_model.pkl'
+    from CLASSIFICATION.KNN_Classification.knn_train import KNNClassifier  # Import your KNN training class
+    X, y = load_iris_data()
+
+    knn = KNNClassifier(n_neighbors=3)  # Adjust n_neighbors as needed
+    knn.train_model(X, y)  # Train KNN model
+    knn.save_model(MODEL_PATH)  # Save the model
+
+    return "KNN model trained successfully!"
+
+def validate_knn(sepal_length, sepal_width, petal_length, petal_width):
+    MODEL_PATH = 'Saved_models/knn_model.pkl'
+    with open(MODEL_PATH, 'rb') as model_file:
+        knn_model = pickle.load(model_file)
+
+    # Prepare the input for prediction
+    input_data = np.array([[sepal_length, sepal_width, petal_length, petal_width]])
+    prediction = knn_model.predict(input_data)
+
+    return prediction[0]
+
 # Streamlit interface
 st.title("Machine Learning Playground")
 
@@ -56,12 +86,12 @@ if model_type == "Classification":
     # Dropdown for classification methods
     classification_method = st.selectbox("Select Classification Method", [
         "Naive Bayes", 
+        "KNN",  # Added KNN to the classification methods
         "Neural Network", 
         "SVM", 
         "Random Forest", 
         "Decision Tree Classifier", 
         "Gradient Boosting", 
-        "KNN", 
         "Mixture of Gaussians"
     ])
 
@@ -71,15 +101,23 @@ if model_type == "Classification":
             message = train_naive_bayes()
             st.success(message)
 
-    # Input area for testing
-    email_input = st.text_area("Enter email text for classification:")
-    result_placeholder = st.empty()
-    if st.button("Test Naive Bayes Model"):
-        if email_input:  # Check if input is provided
-            result = validate_email(email_input)  # Classify the email
-            result_placeholder.text_area("Classification Result:", result, height=150)  # Display result
-        else:
-            st.error("Please enter an email to classify.")  # Error if input is empty
+    elif classification_method == "KNN":
+        if st.button("Train KNN Model"):
+            message = train_knn()
+            st.success(message)
+
+        # Input area for testing KNN
+        st.subheader("Test KNN Model")
+        sepal_length = st.number_input("Sepal Length", min_value=0.0, max_value=10.0, value=5.0)
+        sepal_width = st.number_input("Sepal Width", min_value=0.0, max_value=10.0, value=3.0)
+        petal_length = st.number_input("Petal Length", min_value=0.0, max_value=10.0, value=4.0)
+        petal_width = st.number_input("Petal Width", min_value=0.0, max_value=10.0, value=1.5)
+
+        if st.button("Test KNN Model"):
+            prediction = validate_knn(sepal_length, sepal_width, petal_length, petal_width)
+            st.write(f"Predicted Species: {prediction}")
+
+    # Placeholder for other classification methods (to be implemented later)
 
 elif model_type == "Regression":
     # Dropdown for regression methods
@@ -90,8 +128,6 @@ elif model_type == "Regression":
         "Decision Tree Regression", 
         "Gradient Boosting (Regression)"
     ])
-    # Placeholder for regression logic (to be implemented later)
-   
 
     if regression_method == "Multiple Regression":
         DATA_PATH = 'Datasets/Students_Performance.csv'  # Adjust the path to your dataset
@@ -110,8 +146,11 @@ elif model_type == "Regression":
             st.write(f"Mean Squared Error (MSE): {mse:.4f}")
             st.write(f"R² Score: {r2:.4f}")
 
-        # Check if the model is trained
-        if 'test_x' in locals () and 'test_y' in locals():
+            # Save unique values and range limits to session state
+            st.session_state.test_x = test_x
+            st.session_state.test_y = test_y
+
+        # Check if unique values and range limits are available in session state if 'test_x' in st.session_state:
             # Display input sliders and dropdowns for prediction input
             st.subheader("Test the model with custom input")
             user_input = {
@@ -187,7 +226,7 @@ elif model_type == "Regression":
 
                 # Handle unknown inputs by default values
                 # crct_input = handle_unknown(1, modes, user_input)
-                input_df = pd.DataFrame([user_input])
+                input_df = pd .DataFrame([user_input])
                 if target_column in input_df.columns:
                     input_df = input_df.drop(columns=[target_column])
 
@@ -195,9 +234,17 @@ elif model_type == "Regression":
                 prediction = decision_tree_model.predict(input_df)
                 st.write(f"Predicted: ${prediction[0]:.3f}")
 
+                # Plot prediction point on the existing data scatter plot
+                fig, ax = plt.subplots()
+                scatter = ax.scatter(st.session_state.test_x[:, 0], st.session_state.test_x[:, 1], c=st.session_state.test_y, cmap='viridis')
+                ax.scatter([user_input['bed']], [user_input['bath']], color='red', label="Prediction", s=100, edgecolor="black")
+                legend1 = ax.legend(*scatter.legend_elements(), title="Prices")
+                ax.add_artist(legend1)
+                ax.legend()
+                st.pyplot(fig)
+
 elif model_type == "Clustering":
 
-    
     # Dropdown for clustering methods
     clustering_method = st.selectbox("Select Clustering Method", [
         "K-Means Clustering", 
@@ -209,52 +256,45 @@ elif model_type == "Clustering":
     if clustering_method == "K-Medoids Clustering":
 
         from CLUSTERING.K_MEDOIDS.k_med_train import train_kmedoids
-        from CLUSTERING.K_MEDOIDS.k_med_test import predict_cluster
-        # Hyperparameters
-        n_clusters = st.slider("Number of Clusters", min_value=2, max_value=10, value=3)
-        max_iter = st.number_input("Max Iterations", min_value=100, max_value=500, value=300)
-        metric = st.selectbox("Distance Metric", ["euclidean"])
+        from CLUSTERING.K_MEDOIDS.k_med_test import predict_cluster              
+
+        # User inputs for data generation
+        shape = st.selectbox("Select Data Shape", ["blobs", "moons", "circles"])
+        n_samples = st.number_input("Number of Samples", min_value=10, max_value=1000, value=100)
+        noise = st.number_input("Noise Level", min_value=0.0, max_value=1.0, value=0.1, step=0.01)
+
+        # Hyperparameters for DBSCAN
+        eps = st.number_input("Epsilon (eps)", min_value=0.01, max_value=5.0, value=0.5, step=0.01)
+        min_samples = st.slider("Minimum Samples", min_value=1, max_value=50, value=5)
 
         if st.button("Train K-Medoids Model"):
-            message, silhouette, data_pca, labels = train_kmedoids(n_clusters=n_clusters, max_iter=max_iter, metric=metric)
+            message, silhouette, data_pca, labels = train_kmedoids(shape=shape, n_samples=n_samples, eps=eps, min_samples=min_samples, noise=noise)
             st.success(message)
 
-            # Store data_pca and labels in session state for later use
+            # Display training plot
+            st.image('Saved_models/kmedoids_plot.png')
+
+            # Store data_pca and labels in session state
             st.session_state.data_pca = data_pca
             st.session_state.labels = labels
-            
-            # Plot training data
-            fig, ax = plt.subplots()
-            scatter = ax.scatter(data_pca[:, 0], data_pca[:, 1], c=labels, cmap='viridis')
-            legend1 = ax.legend(*scatter.legend_elements(), title="Clusters")
-            ax.add_artist(legend1)
-            st.pyplot(fig)
 
         # Prediction input
         if 'data_pca' in st.session_state:
             st.subheader("Predict Cluster for New Data")
 
-            data_pca = st.session_state.data_pca
-            labels = st.session_state.labels
-
-            pca_min = np.min(data_pca, axis=0)
-            pca_max = np.max(data_pca, axis=0)
-
-            gdp_input = st.number_input("GDP per Capita", min_value=float(pca_min[0]), max_value=float(pca_max[0]), step=0.01)
-            social_support_input = st.number_input("Social Support", min_value=float(pca_min[1]), max_value=float(pca_max[1]), step=0.01)
-            life_expectancy = st.number_input("Life Expectancy", min_value=float(0.10), max_value=float(1.10), step=0.01)
-            Freedom_of_choices = st.number_input("Freedom to make Life choices", min_value=float(0.01), max_value=float(0.60), step=0.01)
+            # User input for new data point
+            feature1 = st.number_input("Feature 1", value=0.0)
+            feature2 = st.number_input("Feature 2", value=0.0)
 
             if st.button("Predict Cluster"):
-                new_data = [gdp_input, social_support_input, life_expectancy, Freedom_of_choices]
+                new_data = [feature1, feature2]
                 cluster = predict_cluster(new_data)
                 st.write(f"Predicted Cluster: {cluster}")
 
-        
                 # Plot prediction point on the existing data scatter plot
                 fig, ax = plt.subplots()
-                scatter = ax.scatter(data_pca[:, 0], data_pca[:, 1], c=labels, cmap='viridis')
-                ax.scatter([new_data[0]], [new_data[1]], color='red', label="Prediction", s=100, edgecolor="black")
+                scatter = ax.scatter(st.session_state.data_pca[:, 0], st.session_state.data_pca[:, 1], c=st.session_state.labels, cmap='viridis')
+                ax.scatter(new_data[0], new_data[1], color='red', label="Prediction", s=100, edgecolor="black")
                 legend1 = ax.legend(*scatter.legend_elements(), title="Clusters")
                 ax.add_artist(legend1)
                 ax.legend()
@@ -305,5 +345,3 @@ elif model_type == "Clustering":
                 ax.add_artist(legend1)
                 ax.legend()
                 st.pyplot(fig)
-            # Placeholder for clustering logic (to be implemented later)
-
