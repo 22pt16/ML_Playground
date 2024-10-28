@@ -4,6 +4,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
+
 # Handle unknown data
 
 def train_svm():
@@ -395,3 +396,58 @@ elif model_type == "Clustering":
                 ax.add_artist(legend1)
                 ax.legend()
                 st.pyplot(fig)
+    elif clustering_method == "Spectral Clustering":
+        from CLUSTERING.SPECTRAL.spectral_train import generate_data, spectral_clustering_from_scratch
+        from CLUSTERING.SPECTRAL.spectral_test import predict_cluster
+        # Select data type and parameters
+        data_type = st.selectbox("Choose Data Type", ['circles', 'moons'])
+        n_clusters = st.slider("Number of Clusters", min_value=8, max_value=50, value=8)
+        n_samples = st.slider("Number of Samples", min_value=800, max_value=3000, value=1000)
+        gamma = st.slider("Gamma for RBF Kernel", min_value=0.20, max_value=150.0, value=15.0)
+
+        # Train and visualize clustering on button click
+        if st.button("Train and Visualize Clustering"):
+            # Generate data and perform clustering
+            X, _ = generate_data(data_type, n_samples)
+            labels, silhouette = spectral_clustering_from_scratch(X, n_clusters, gamma)
+
+            # Display silhouette score
+            st.write(f"Silhouette Score: {silhouette:.2f}")
+
+            # Visualize clustering result
+            fig, ax = plt.subplots()
+            scatter = ax.scatter(X[:, 0], X[:, 1], c=labels, cmap='viridis', s=10)
+            plt.colorbar(scatter, ax=ax, label="Cluster")
+            plt.title("Spectral Clustering Visualization")
+            plt.xlabel("Feature 1")
+            plt.ylabel("Feature 2")
+            st.pyplot(fig)
+
+            # Store data for testing predictions
+            st.session_state.X = X
+            st.session_state.labels = labels
+
+        # Testing part: Get cluster for a new data point
+        st.write("## Test New Data Point")
+        feature_1 = st.number_input("Feature 1", value=0.0)
+        feature_2 = st.number_input("Feature 2", value=0.0)
+
+        if st.button("Get Cluster for New Point"):
+            if 'X' in st.session_state and 'labels' in st.session_state:
+                # Predict the cluster for the new point
+                new_point = np.array([feature_1, feature_2])
+                cluster = predict_cluster(new_point, st.session_state.X, st.session_state.labels)
+                st.write(f"The new point ({feature_1}, {feature_2}) is assigned to cluster: {cluster}")
+
+                # Visualize the dataset with the new point marked
+                fig, ax = plt.subplots()
+                scatter = ax.scatter(st.session_state.X[:, 0], st.session_state.X[:, 1], c=st.session_state.labels, cmap='viridis', s=10)
+                ax.scatter(new_point[0], new_point[1], c='red', marker='X', s=100, label="New Point")
+                plt.colorbar(scatter, ax=ax, label="Cluster")
+                plt.title("Spectral Clustering Visualization with New Point")
+                plt.xlabel("Feature 1")
+                plt.ylabel("Feature 2")
+                plt.legend()
+                st.pyplot(fig)
+            else:
+                st.write("Please train the clustering model first by clicking 'Train and Visualize Clustering'.")
