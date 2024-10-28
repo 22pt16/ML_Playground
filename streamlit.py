@@ -1,7 +1,9 @@
 import streamlit as st
 import pickle
 import pandas as pd
-from sklearn.impute import SimpleImputer    #handle unknown data
+import matplotlib.pyplot as plt
+import numpy as np
+    #handle unknown data
 
 
 #1.NAIVE BAYES
@@ -154,6 +156,9 @@ elif model_type == "Regression":
                 st.write(f"Predicted: ${prediction[0]:.3f}")
 
 elif model_type == "Clustering":
+
+    from CLUSTERING.K_MEDOIDS.k_med_train import train_kmedoids
+    from CLUSTERING.K_MEDOIDS.k_med_test import predict_cluster
     # Dropdown for clustering methods
     clustering_method = st.selectbox("Select Clustering Method", [
         "K-Means Clustering", 
@@ -161,6 +166,57 @@ elif model_type == "Clustering":
         "K-Medoids Clustering", 
         "Spectral Clustering"
     ])
+
+    if clustering_method == "K-Medoids Clustering":
+        # Hyperparameters
+        n_clusters = st.slider("Number of Clusters", min_value=2, max_value=10, value=3)
+        max_iter = st.number_input("Max Iterations", min_value=100, max_value=500, value=300)
+        metric = st.selectbox("Distance Metric", ["euclidean"])
+
+        if st.button("Train K-Medoids Model"):
+            message, silhouette, data_pca, labels = train_kmedoids(n_clusters=n_clusters, max_iter=max_iter, metric=metric)
+            st.success(message)
+
+            # Store data_pca and labels in session state for later use
+            st.session_state.data_pca = data_pca
+            st.session_state.labels = labels
+            
+            # Plot training data
+            fig, ax = plt.subplots()
+            scatter = ax.scatter(data_pca[:, 0], data_pca[:, 1], c=labels, cmap='viridis')
+            legend1 = ax.legend(*scatter.legend_elements(), title="Clusters")
+            ax.add_artist(legend1)
+            st.pyplot(fig)
+
+        # Prediction input
+        if 'data_pca' in st.session_state:
+            st.subheader("Predict Cluster for New Data")
+
+            data_pca = st.session_state.data_pca
+            labels = st.session_state.labels
+
+            pca_min = np.min(data_pca, axis=0)
+            pca_max = np.max(data_pca, axis=0)
+
+            gdp_input = st.number_input("GDP per Capita", min_value=float(pca_min[0]), max_value=float(pca_max[0]), step=0.01)
+            social_support_input = st.number_input("Social Support", min_value=float(pca_min[1]), max_value=float(pca_max[1]), step=0.01)
+            life_expectancy = st.number_input("Life Expectancy", min_value=float(0.10), max_value=float(1.10), step=0.01)
+            Freedom_of_choices = st.number_input("Freedom to make Life choices", min_value=float(0.01), max_value=float(0.60), step=0.01)
+
+            if st.button("Predict Cluster"):
+                new_data = [gdp_input, social_support_input, life_expectancy, Freedom_of_choices]
+                cluster = predict_cluster(new_data)
+                st.write(f"Predicted Cluster: {cluster}")
+
+        
+                # Plot prediction point on the existing data scatter plot
+                fig, ax = plt.subplots()
+                scatter = ax.scatter(data_pca[:, 0], data_pca[:, 1], c=labels, cmap='viridis')
+                ax.scatter([new_data[0]], [new_data[1]], color='red', label="Prediction", s=100, edgecolor="black")
+                legend1 = ax.legend(*scatter.legend_elements(), title="Clusters")
+                ax.add_artist(legend1)
+                ax.legend()
+                st.pyplot(fig)
+                    
     # Placeholder for clustering logic (to be implemented later)
 
-# Add logic for Regression and Clustering as needed

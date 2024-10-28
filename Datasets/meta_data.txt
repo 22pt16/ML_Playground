@@ -3,13 +3,26 @@ DATASET_CONFIG = {
         "path": "Datasets/SydneyHousePrices.csv",
         "target": "sellPrice",
         "cat_feature":  #Categorical features
-                    [suburb],
-                    [postalCode],
-                    [propType],
+                    ["suburb"],
+                    ["postalCode"],
+                    ["propType"],
         "num_feature":  #Numerical Features
                     ["bed",1, 5],
                     ["bath",1, 5],
                     ["car",1, 5]
+    },
+
+    "Iris Dataset":{
+        "path": "Datasets/k_med_iris_data.txt",
+        "target": "class",
+        "cat_feature":  #Categorical features,
+                        ["class"]
+        "num_feature": ["sepal length"],
+                        ["sepal width"],
+                        ["petal length"],
+                        ["petal width"]
+
+
     },
     
     # Add more datasets here
