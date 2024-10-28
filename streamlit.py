@@ -5,7 +5,10 @@ import matplotlib.pyplot as plt
 import numpy as np
     #handle unknown data
 
-
+def train_svm():
+    from CLASSIFICATION.SVM.svm_train import train_model  # Import your training function
+    msg = train_model()  # Train and save model
+    return msg
 #1.NAIVE BAYES
 # Load the training datasets
 def load_emails():
@@ -72,14 +75,31 @@ if model_type == "Classification":
             st.success(message)
 
     # Input area for testing
-    email_input = st.text_area("Enter email text for classification:")
-    result_placeholder = st.empty()
-    if st.button("Test Naive Bayes Model"):
-        if email_input:  # Check if input is provided
-            result = validate_email(email_input)  # Classify the email
-            result_placeholder.text_area("Classification Result:", result, height=150)  # Display result
-        else:
-            st.error("Please enter an email to classify.")  # Error if input is empty
+        email_input = st.text_area("Enter email text for classification:")
+        result_placeholder = st.empty()
+        if st.button("Test Naive Bayes Model"):
+            if email_input:  # Check if input is provided
+                result = validate_email(email_input)  # Classify the email
+                result_placeholder.text_area("Classification Result:", result, height=150)  # Display result
+            else:
+                st.error("Please enter an email to classify.")  # Error if input is empty
+    if classification_method == "SVM":
+        if st.button("Train Iris SVM Model"):
+            msg = train_svm()
+            st.success(msg)
+
+        st.subheader("Iris Data Prediction")
+
+        sepal_length = st.number_input("Sepal Length", min_value=0.0, max_value=10.0, value=5.0)
+        sepal_width = st.number_input("Sepal Width", min_value=0.0, max_value=10.0, value=3.0)
+        petal_length = st.number_input("Petal Length", min_value=0.0, max_value=10.0, value=4.0)
+        petal_width = st.number_input("Petal Width", min_value=0.0, max_value=10.0, value=1.0)
+
+        if st.button("Classify"):
+            input_data = np.array([[sepal_length, sepal_width, petal_length, petal_width]])
+            from CLASSIFICATION.SVM.svm_test import predict_model
+            prediction = predict_model(input_data)
+            st.write("Prediction:", prediction)
 
 elif model_type == "Regression":
     # Dropdown for regression methods
