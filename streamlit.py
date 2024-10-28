@@ -91,9 +91,47 @@ elif model_type == "Regression":
         "Gradient Boosting (Regression)"
     ])
     # Placeholder for regression logic (to be implemented later)
-   
+    if regression_method == "Multiple Regression":
+        DATA_PATH = 'Datasets/Students_Performance.csv'  # Adjust the path to your dataset
+        from REGRESSION.DECISION_TREE.MULTIPLEREGRESSION.mr_train import train_multiple_regression_model
+        from REGRESSION.DECISION_TREE.MULTIPLEREGRESSION.mr_test import test_multiple_regression_model
 
-    if regression_method == "Decision Tree Regression":
+        target_column = 'Performance Index'  # Adjust to your actual target column
+
+        # Train the Multiple Regression model
+        if st.button("Train Multiple Regression Model"):
+            test_x, test_y, mse, mae, r2, message = train_multiple_regression_model(DATA_PATH, target_column)
+            st.success(message)
+
+            # Display evaluation metrics
+            st.write(f"Mean Absolute Error (MAE): {mae:.4f}")
+            st.write(f"Mean Squared Error (MSE): {mse:.4f}")
+            st.write(f"R² Score: {r2:.4f}")
+
+        # Check if the model is trained
+        if 'test_x' in locals () and 'test_y' in locals():
+            # Display input sliders and dropdowns for prediction input
+            st.subheader("Test the model with custom input")
+            user_input = {
+                'feature1': st.slider("Feature 1", min_value=0, max_value=100, value=50, step=1),
+                'feature2': st.slider("Feature 2", min_value=0, max_value=100, value=50, step=1),
+                # Add more features as needed
+            }
+
+            if st.button("Predict with Custom Input"):
+                # Load model once
+                MODEL_PATH = 'Saved_models/multiple_regression_model.pkl'
+                with open(MODEL_PATH, 'rb') as model_file:
+                    multiple_regression_model = pickle.load(model_file)
+
+                # Handle unknown inputs by default values
+                input_df = pd.DataFrame([user_input])
+
+                # Predict the target variable using the corrected user input
+                prediction = multiple_regression_model.predict(input_df)
+                st.write(f"Predicted: {prediction[0]:.3f}")
+
+    elif regression_method == "Decision Tree Regression":
         DATA_PATH = 'Datasets/SydneyHousePrices.csv'
         from REGRESSION.DECISION_TREE.dtr_train import train_decision_tree_model, meta_data, handle_unknown
         from REGRESSION.DECISION_TREE.dtr_test import test_decision_tree_model
