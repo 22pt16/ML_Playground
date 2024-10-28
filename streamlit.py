@@ -115,7 +115,7 @@ if model_type == "Classification":
                 result_placeholder.text_area("Classification Result:", result, height=150)  # Display result
             else:
                 st.error("Please enter an email to classify.")  # Error if input is empty
-    if classification_method == "SVM":
+    elif classification_method == "SVM":
         if st.button("Train Iris SVM Model"):
             msg = train_svm()
             st.success(msg)
@@ -147,6 +147,55 @@ if model_type == "Classification":
         if st.button("Test KNN Model"):
             prediction = validate_knn(sepal_length, sepal_width, petal_length, petal_width)
             st.write(f"Predicted Species: {prediction}")
+    elif classification_method == "Decision Tree Classifier":
+        from CLASSIFICATION.DT_CLASS.dtc_train import load_data, fit, predict, accuracy, calculate_metrics
+
+        
+        # Sidebar: Model parameters
+        st.sidebar.header("Model Parameters")
+        criterion = st.sidebar.selectbox("Criterion", ["gini", "entropy"])
+        max_depth = st.sidebar.slider("Max Depth", 5, 25, 5)
+
+        # Load dataset
+        X, y = load_data()
+
+        # Train model on button click
+        if st.sidebar.button("Train Model"):
+            # Train decision tree model
+            model = fit(X, y, max_depth=max_depth, criterion=criterion)
+            predictions = predict(model, X)
+            acc = accuracy(y, predictions)
+            precision, recall, f1 = calculate_metrics(y, predictions)
+
+            st.sidebar.write(f"Training Accuracy: {acc:.2f}")
+            st.sidebar.write(f"Precision: {precision:.2f}")
+            st.sidebar.write(f"Recall: {recall:.2f}")
+            st.sidebar.write(f"F1 Score: {f1:.2f}")
+
+            # Save model to file for further use
+            with open("decision_tree_model.pkl", "wb") as f:
+                pickle.dump(model, f)
+
+        # Test new data point
+        st.header("Classify New Data Point")
+        pclass = st.slider("Pclass (1=1st, 2=2nd, 3=3rd)", 1, 3, 3)
+        sex = st.selectbox("Sex", ["male", "female"])
+        sex = 1 if sex == "male" else 0
+        age = st.slider("Age", 1, 80, 30)
+        fare = st.slider("Fare", 0.0, 500.0, 8.05)
+
+        # Classify the new data point
+        if st.button("Classify New Data Point"):
+            # Load model from pickle file
+            try:
+                with open("decision_tree_model.pkl", "rb") as f:
+                    model = pickle.load(f)
+                new_point = np.array([pclass, sex, age, fare])
+                prediction = predict(model, np.array([new_point]))[0]
+                st.write(f"The new data point is predicted to: {'Survive' if prediction == 1 else 'Not Survive'}")
+            except FileNotFoundError:
+                st.write("Model not found. Please train the model first by clicking 'Train Model'.")
+
         
     # Placeholder for other classification methods (to be implemented later)
 
