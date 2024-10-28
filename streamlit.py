@@ -91,11 +91,8 @@ elif model_type == "Regression":
         "Gradient Boosting (Regression)"
     ])
     # Placeholder for regression logic (to be implemented later)
-<<<<<<< HEAD
    
 
-    if regression_method == "Decision Tree Regression":
-=======
     if regression_method == "Multiple Regression":
         DATA_PATH = 'Datasets/Students_Performance.csv'  # Adjust the path to your dataset
         from REGRESSION.MULTIPLEREGRESSION.mr_train import train_multiple_regression_model
@@ -137,7 +134,6 @@ elif model_type == "Regression":
                 st.write(f"Predicted: {prediction[0]:.3f}")
 
     elif regression_method == "Decision Tree Regression":
->>>>>>> 343c729a5f4c5c5b924ae500841849d514c68dd1
         DATA_PATH = 'Datasets/SydneyHousePrices.csv'
         from REGRESSION.DECISION_TREE.dtr_train import train_decision_tree_model, meta_data, handle_unknown
         from REGRESSION.DECISION_TREE.dtr_test import test_decision_tree_model
@@ -201,8 +197,7 @@ elif model_type == "Regression":
 
 elif model_type == "Clustering":
 
-    from CLUSTERING.K_MEDOIDS.k_med_train import train_kmedoids
-    from CLUSTERING.K_MEDOIDS.k_med_test import predict_cluster
+    
     # Dropdown for clustering methods
     clustering_method = st.selectbox("Select Clustering Method", [
         "K-Means Clustering", 
@@ -212,6 +207,9 @@ elif model_type == "Clustering":
     ])
 
     if clustering_method == "K-Medoids Clustering":
+
+        from CLUSTERING.K_MEDOIDS.k_med_train import train_kmedoids
+        from CLUSTERING.K_MEDOIDS.k_med_test import predict_cluster
         # Hyperparameters
         n_clusters = st.slider("Number of Clusters", min_value=2, max_value=10, value=3)
         max_iter = st.number_input("Max Iterations", min_value=100, max_value=500, value=300)
