@@ -20,8 +20,7 @@ def classify_email(email):
         if word in likelihood_table:
             good_prob *= likelihood_table[word][0]
             spam_prob *= likelihood_table[word][1]
-        else:
-            return f"Unknown word: {word}"
+        
 
     # Normalize
     total_prob = good_prob + spam_prob

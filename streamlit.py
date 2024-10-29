@@ -96,12 +96,12 @@ if model_type == "Classification":
     # Dropdown for classification methods
     classification_method = st.selectbox("Select Classification Method", [
         "Naive Bayes", 
-        "KNN",  # Added KNN to the classification methods
-        "Neural Network", 
+        "KNN",
         "SVM", 
-        "Decision Tree Classifier", 
-        "Gradient Boosting", 
+        "Logistic Regression", 
+        "Decision Tree Classifier",  
         "Mixture of Gaussians"
+        
     ])
 
     # Button to train the selected classification model
@@ -119,6 +119,45 @@ if model_type == "Classification":
                 result_placeholder.text_area("Classification Result:", result, height=150)  # Display result
             else:
                 st.error("Please enter an email to classify.")  # Error if input is empty
+    elif classification_method ==  "Logistic Regression":
+        # Logistic Regression
+        from REGRESSION.LOGISTIC.logistic_train import train_logistic_regression_model
+        data = pd.read_csv('Datasets/diabetes.csv')
+        X = data.drop('Outcome', axis=1)
+        y = data['Outcome']
+
+    
+        # Train model
+        if st.button("Train Model"):
+            accuracy, conf_matrix, class_report, msg = train_logistic_regression_model('Datasets/diabetes.csv', 'Outcome')
+            st.write(f"Accuracy: {accuracy:.4f}")
+            st.write("\nConfusion Matrix:\n", conf_matrix)
+            st.write("\nClassification Report:\n", class_report)
+            st.success(msg)
+
+        st.subheader("Test Logistic Model")
+
+        # Input sliders for prediction
+        pregnancies = st.slider("Pregnancies", min_value=int(X['Pregnancies'].min()), max_value=int(X['Pregnancies'].max()), value=int(X['Pregnancies'].mean()))
+        glucose = st.slider("Glucose", min_value=int(X['Glucose'].min()), max_value=int(X['Glucose'].max()), value=int(X['Glucose'].mean()))
+        blood_pressure = st.slider("Blood Pressure", min_value=int(X['BloodPressure'].min()), max_value=int(X['BloodPressure'].max()), value=int(X['BloodPressure'].mean()))
+        skin_thickness = st.slider("Skin Thickness", min_value=int(X['SkinThickness'].min()), max_value=int(X['SkinThickness'].max()), value=int(X['SkinThickness'].mean()))
+        insulin = st.slider("Insulin", min_value=int(X['Insulin'].min()), max_value=int(X['Insulin'].max()), value=int(X['Insulin'].mean()))
+        bmi = st.slider("BMI", min_value=float(X['BMI'].min()), max_value=float(X['BMI'].max()), value=float(X['BMI'].mean()))
+        diabetes_pedigree_function = st.slider("Diabetes Pedigree Function", min_value=float(X['DiabetesPedigreeFunction'].min()), max_value=float(X['DiabetesPedigreeFunction'].max()), value=float(X['DiabetesPedigreeFunction'].mean()))
+        age = st.slider("Age", min_value=int(X['Age'].min()), max_value=int(X['Age'].max()), value=int(X['Age'].mean()))
+
+
+        # Make prediction
+        if st.button("Make Prediction"):
+            input_data = pd.DataFrame([[pregnancies, glucose, blood_pressure, skin_thickness, insulin, bmi, diabetes_pedigree_function, age]], 
+                               columns=['Pregnancies', 'Glucose', 'BloodPressure', 'SkinThickness', 'Insulin', 'BMI', 'DiabetesPedigreeFunction', 'Age'])
+            
+            with open('Saved_models/logistic_regression_model.pkl', 'rb') as model_file:
+                regression_model = pickle.load(model_file)
+
+            prediction = regression_model.predict(input_data)
+            st.write(f"Predicted Outcome: {prediction[0]}")
     elif classification_method == "SVM":
         if st.button("Train Iris SVM Model"):
             msg = train_svm()
@@ -192,7 +231,7 @@ if model_type == "Classification":
         if st.button("Classify New Data Point"):
             # Load model from pickle file
             try:
-                with open("decision_tree_model.pkl", "rb") as f:
+                with open("Saved_models/decision_tree_model.pkl", "rb") as f:
                     model = pickle.load(f)
                 new_point = np.array([pclass, sex, age, fare])
                 prediction = predict(model, np.array([new_point]))[0]
@@ -208,51 +247,45 @@ elif model_type == "Regression":
     regression_method = st.selectbox("Select Regression Method", [
         "Linear Regression", 
         "Multiple Regression", 
-        "Logistic Regression", 
         "Decision Tree Regression", 
         "Gradient Boosting (Regression)"
     ])
-    if regression_method ==  "Logistic Regression":
-        # Logistic Regression
-        from REGRESSION.LOGISTIC.logistic_train import train_logistic_regression_model
-        data = pd.read_csv('Datasets/diabetes.csv')
-        X = data.drop('Outcome', axis=1)
-        y = data['Outcome']
-
     
-        # Train model
-        if st.button("Train Model"):
-            accuracy, conf_matrix, class_report, msg = train_logistic_regression_model('Datasets/diabetes.csv', 'Outcome')
-            st.write(f"Accuracy: {accuracy:.4f}")
-            st.write("\nConfusion Matrix:\n", conf_matrix)
-            st.write("\nClassification Report:\n", class_report)
-            st.success(msg)
+    if regression_method == "Linear Regression":
+       
+        # Load the trained model
+        with open('Saved_models/linear_regression_model.pkl', 'rb') as file:
+            model = pickle.load(file)
 
-        st.subheader("Test Logistic Model")
-
-        # Input sliders for prediction
-        pregnancies = st.slider("Pregnancies", min_value=int(X['Pregnancies'].min()), max_value=int(X['Pregnancies'].max()), value=int(X['Pregnancies'].mean()))
-        glucose = st.slider("Glucose", min_value=int(X['Glucose'].min()), max_value=int(X['Glucose'].max()), value=int(X['Glucose'].mean()))
-        blood_pressure = st.slider("Blood Pressure", min_value=int(X['BloodPressure'].min()), max_value=int(X['BloodPressure'].max()), value=int(X['BloodPressure'].mean()))
-        skin_thickness = st.slider("Skin Thickness", min_value=int(X['SkinThickness'].min()), max_value=int(X['SkinThickness'].max()), value=int(X['SkinThickness'].mean()))
-        insulin = st.slider("Insulin", min_value=int(X['Insulin'].min()), max_value=int(X['Insulin'].max()), value=int(X['Insulin'].mean()))
-        bmi = st.slider("BMI", min_value=float(X['BMI'].min()), max_value=float(X['BMI'].max()), value=float(X['BMI'].mean()))
-        diabetes_pedigree_function = st.slider("Diabetes Pedigree Function", min_value=float(X['DiabetesPedigreeFunction'].min()), max_value=float(X['DiabetesPedigreeFunction'].max()), value=float(X['DiabetesPedigreeFunction'].mean()))
-        age = st.slider("Age", min_value=int(X['Age'].min()), max_value=int(X['Age'].max()), value=int(X['Age'].mean()))
-
-
-        # Make prediction
-        if st.button("Make Prediction"):
-            input_data = pd.DataFrame([[pregnancies, glucose, blood_pressure, skin_thickness, insulin, bmi, diabetes_pedigree_function, age]], 
-                               columns=['Pregnancies', 'Glucose', 'BloodPressure', 'SkinThickness', 'Insulin', 'BMI', 'DiabetesPedigreeFunction', 'Age'])
+        st.title("Customer Spending Score Prediction")
+        age = st.number_input("Age", min_value=18, max_value=100, value=30)
+        annual_income = st.number_input("Annual Income (k$)", min_value=0, max_value=200, value=50)
+        gender = st.selectbox("Gender", [0,1])
+        # Predict button
+        if st.button("Predict"):
+            # Prepare input data
+            input_data = pd.DataFrame({
+                'Age': [age],
+                'Annual Income (k$)': [annual_income],
+                'Gender': [gender]
+            })
+            # Input fields
             
-            with open('Saved_models/logistic_regression_model.pkl', 'rb') as model_file:
-                regression_model = pickle.load(model_file)
+            # Preprocess input data
+            #input_data = preprocess_data(input_data)
+            
+            # Make prediction
+            prediction = model.predict(input_data)
+            
+            st.success(f"Predicted Spending Score: {prediction[0]:.2f}")
+        
 
-            prediction = regression_model.predict(input_data)
-            st.write(f"Predicted Outcome: {prediction[0]}")
+        
+
+       
 
     elif regression_method == "Multiple Regression":
+       
         from REGRESSION.MULTIPLEREGRESSION.mr_train import train_multiple_regression_model
         import pickle
 
@@ -333,8 +366,7 @@ elif model_type == "Regression":
             st.success(message)
 
             # Display evaluation metrics
-            st.write(f"Mean Absolute Error (MAE): {mae:.4f}")
-            st.write(f"Mean Squared Error (MSE): {mse:.4f}")
+            
             st.write(f"R² Score: {r2:.4f}")
 
             # Save unique values and range limits to session state
@@ -449,13 +481,14 @@ elif model_type == "Regression":
 elif model_type == "Clustering":
 
     # Dropdown for clustering methods
-    clustering_method = st.selectbox("Select Clustering Method", [
-        "K-Means Clustering", 
+    clustering_method = st.selectbox("Select Clustering Method", [ 
         "DBSCAN Clustering", 
+        "Spectral Clustering",
         "K-Medoids Clustering", 
         "PCA",
         "Spectral Clustering",
-        "Mixture of Gaussians"
+        "Mixture of Gaussians",
+        "PCA"        
     ])
 
     if clustering_method == "K-Medoids Clustering":
