@@ -147,10 +147,10 @@ if model_type == "Classification":
         if st.button("Test KNN Model"):
             prediction = validate_knn(sepal_length, sepal_width, petal_length, petal_width)
             st.write(f"Predicted Species: {prediction}")
+
     elif classification_method == "Decision Tree Classifier":
         from CLASSIFICATION.DT_CLASS.dtc_train import load_data, fit, predict, accuracy, calculate_metrics
 
-        
         # Sidebar: Model parameters
         st.sidebar.header("Model Parameters")
         criterion = st.sidebar.selectbox("Criterion", ["gini", "entropy"])
@@ -173,7 +173,7 @@ if model_type == "Classification":
             st.sidebar.write(f"F1 Score: {f1:.2f}")
 
             # Save model to file for further use
-            with open("decision_tree_model.pkl", "wb") as f:
+            with open("Saved_models/decision_tree_model.pkl", "wb") as f:
                 pickle.dump(model, f)
 
         # Test new data point
@@ -244,7 +244,7 @@ elif model_type == "Regression":
             
             with open('Saved_models/logistic_regression_model.pkl', 'rb') as model_file:
                 regression_model = pickle.load(model_file)
-                
+
             prediction = regression_model.predict(input_data)
             st.write(f"Predicted Outcome: {prediction[0]}")
 

@@ -30,12 +30,12 @@ def train_pca_kmeans(X, n_clusters, n_components):
     silhouette = silhouette_score(X_reduced, labels)
     
     # Save models
-    with open("pca_kmeans_model.pkl", "wb") as f:
+    with open("Saved_models/pca_kmeans_model.pkl", "wb") as f:
         pickle.dump((eigenvector_subset, mean_vector, kmeans), f)
     
     return labels, X_reduced, silhouette
 
 def load_models():
-    with open("pca_kmeans_model.pkl", "rb") as f:
+    with open("Saved_models/pca_kmeans_model.pkl", "rb") as f:
         eigenvector_subset, mean_vector, kmeans = pickle.load(f)
     return eigenvector_subset, mean_vector, kmeans
