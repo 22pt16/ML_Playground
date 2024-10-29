@@ -46,6 +46,16 @@ def train_multiple_regression_model(data_path, target_column):
     model = LinearRegression()
     model.fit(train_x, train_y)
 
+    # Save the model and the label encoder
+    with open('Saved_models/multiple_regression_model.pkl', 'wb') as model_file:
+        pickle.dump(model, model_file)
+
+    # Save the label encoder for the categorical variable
+    label_encoder = LabelEncoder()
+    label_encoder.fit(data['Extracurricular Activities'])  # Fit on the training data
+    with open('Saved_models/label_encoder.pkl', 'wb') as le_file:
+        pickle.dump(label_encoder, le_file)
+
     # Make predictions on the test set
     predictions = model.predict(test_x)
 
@@ -53,9 +63,5 @@ def train_multiple_regression_model(data_path, target_column):
     mae = mean_absolute_error(test_y, predictions)
     mse = mean_squared_error(test_y, predictions)
     r2 = r2_score(test_y, predictions)
-
-    # Save the model
-    with open('Saved_models/multiple_regression_model.pkl', 'wb') as model_file:
-        pickle.dump(model, model_file)
 
     return test_x, test_y, model, mse, mae, r2, "Model trained successfully!"
