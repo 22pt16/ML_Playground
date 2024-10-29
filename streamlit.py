@@ -92,13 +92,12 @@ if model_type == "Classification":
     # Dropdown for classification methods
     classification_method = st.selectbox("Select Classification Method", [
         "Naive Bayes", 
-        "KNN",  # Added KNN to the classification methods 
+        "KNN",
         "SVM", 
         "Logistic Regression", 
-        "Decision Tree Classifier", 
-        "Gradient Boosting", 
+        "Decision Tree Classifier",  
         "Mixture of Gaussians"
-        "Neural Network",
+        
     ])
 
     # Button to train the selected classification model
@@ -405,8 +404,7 @@ elif model_type == "Regression":
 elif model_type == "Clustering":
 
     # Dropdown for clustering methods
-    clustering_method = st.selectbox("Select Clustering Method", [
-        "K-Means Clustering", 
+    clustering_method = st.selectbox("Select Clustering Method", [ 
         "DBSCAN Clustering", 
         "Spectral Clustering",
         "K-Medoids Clustering", 
