@@ -207,6 +207,43 @@ elif model_type == "Regression":
         "Decision Tree Regression", 
         "Gradient Boosting (Regression)"
     ])
+    if regression_method ==  "Logistic Regression":
+        # Logistic Regression
+        from REGRESSION.LOGISTIC.logistic_train import train_logistic_regression_model
+        data = pd.read_csv('Datasets/diabetes.csv')
+        X = data.drop('Outcome', axis=1)
+        y = data['Outcome']
+
+    
+        # Train model
+        if st.button("Train Model"):
+            accuracy, conf_matrix, class_report, msg = train_logistic_regression_model('Datasets/diabetes.csv', 'Outcome')
+            st.write(f"Accuracy: {accuracy:.4f}")
+            st.write("\nConfusion Matrix:\n", conf_matrix)
+            st.write("\nClassification Report:\n", class_report)
+            st.success(msg)
+
+        st.subheader("Test Logistic Model")
+
+        # Input sliders for prediction
+        pregnancies = st.slider("Pregnancies", min_value=int(X['Pregnancies'].min()), max_value=int(X['Pregnancies'].max()), value=int(X['Pregnancies'].mean()))
+        glucose = st.slider("Glucose", min_value=int(X['Glucose'].min()), max_value=int(X['Glucose'].max()), value=int(X['Glucose'].mean()))
+        blood_pressure = st.slider("Blood Pressure", min_value=int(X['BloodPressure'].min()), max_value=int(X['BloodPressure'].max()), value=int(X['BloodPressure'].mean()))
+        skin_thickness = st.slider("Skin Thickness", min_value=int(X['SkinThickness'].min()), max_value=int(X['SkinThickness'].max()), value=int(X['SkinThickness'].mean()))
+        insulin = st.slider("Insulin", min_value=int(X['Insulin'].min()), max_value=int(X['Insulin'].max()), value=int(X['Insulin'].mean()))
+        bmi = st.slider("BMI", min_value=float(X['BMI'].min()), max_value=float(X['BMI'].max()), value=float(X['BMI'].mean()))
+        diabetes_pedigree_function = st.slider("Diabetes Pedigree Function", min_value=float(X['DiabetesPedigreeFunction'].min()), max_value=float(X['DiabetesPedigreeFunction'].max()), value=float(X['DiabetesPedigreeFunction'].mean()))
+        age = st.slider("Age", min_value=int(X['Age'].min()), max_value=int(X['Age'].max()), value=int(X['Age'].mean()))
+
+
+        # Make prediction
+        if st.button("Make Prediction"):
+            input_data = np.array([[pregnancies, glucose, blood_pressure, skin_thickness, insulin, bmi, diabetes_pedigree_function, age]])
+            with open('Saved_models/logistic_regression_model.pkl', 'rb') as model_file:
+                regression_model = pickle.load(model_file)
+            prediction = regression_model.predict(input_data)
+            st.write(f"Predicted Outcome: {prediction[0]}")
+
 
     if regression_method == "Multiple Regression":
        
