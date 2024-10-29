@@ -11,6 +11,7 @@ def train_svm():
     from CLASSIFICATION.SVM.svm_train import train_model  # Import your training function
     msg = train_model()  # Train and save model
     return msg
+
 #1.NAIVE BAYES
 # Load the training datasets
 def load_emails():
@@ -238,9 +239,12 @@ elif model_type == "Regression":
 
         # Make prediction
         if st.button("Make Prediction"):
-            input_data = np.array([[pregnancies, glucose, blood_pressure, skin_thickness, insulin, bmi, diabetes_pedigree_function, age]])
+            input_data = pd.DataFrame([[pregnancies, glucose, blood_pressure, skin_thickness, insulin, bmi, diabetes_pedigree_function, age]], 
+                               columns=['Pregnancies', 'Glucose', 'BloodPressure', 'SkinThickness', 'Insulin', 'BMI', 'DiabetesPedigreeFunction', 'Age'])
+            
             with open('Saved_models/logistic_regression_model.pkl', 'rb') as model_file:
                 regression_model = pickle.load(model_file)
+                
             prediction = regression_model.predict(input_data)
             st.write(f"Predicted Outcome: {prediction[0]}")
 
@@ -393,9 +397,6 @@ elif model_type == "Clustering":
             message, silhouette, data_pca, labels = train_kmedoids( n_clusters, max_iter, metric)
             st.success(message)
 
-            
-           
-
             # Store data_pca and labels in session state
             st.session_state.data_pca = data_pca
             st.session_state.labels = labels
@@ -482,6 +483,7 @@ elif model_type == "Clustering":
                 ax.add_artist(legend1)
                 ax.legend()
                 st.pyplot(fig)
+
     elif clustering_method == "Spectral Clustering":
         from CLUSTERING.SPECTRAL.spectral_train import generate_data, spectral_clustering_from_scratch
         from CLUSTERING.SPECTRAL.spectral_test import predict_cluster
@@ -537,6 +539,7 @@ elif model_type == "Clustering":
                 st.pyplot(fig)
             else:
                 st.write("Please train the clustering model first by clicking 'Train and Visualize Clustering'.")
+
     elif clustering_method == "PCA":
         from CLUSTERING.PCA.pca_train import generate_synthetic_data, train_pca_kmeans, load_models, pca_from_scratch
 

@@ -8,9 +8,10 @@ from sklearn.metrics import accuracy_score, confusion_matrix, classification_rep
 
 # Function to preprocess the data
 def preprocess_data(data, target_column):
+    print("Preprocessing")
     # Check for missing values
     missing_values = data.isnull().sum()
-    print("Missing values:\n", missing_values)
+    print("Missing values Dropping\n")
     data = data.dropna()
 
     # Encode categorical variables
@@ -34,14 +35,18 @@ def preprocess_data(data, target_column):
 
 # Function to train the logistic regression model
 def train_logistic_regression_model(data_path, target_column):
+    print("Training logistic regression model")
     # Load dataset
     data = pd.read_csv(data_path)
     data = preprocess_data(data, target_column)
+
+    
 
     # Define features and target variable
     X = data.drop(target_column, axis=1)
     y = data[target_column]
 
+    
     # Split data into 80% train and 20% test
     train_x, test_x, train_y, test_y = train_test_split(X, y, test_size=0.2, random_state=42)
 
