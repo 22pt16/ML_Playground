@@ -1,4 +1,4 @@
-ML Playground
+**ML Playground**
 
 Welcome to the **ML Playground**! This project provides an interactive interface for exploring a range of popular machine learning algorithms for regression, classification, and clustering tasks. Built using **Streamlit** for the frontend and **scikit-learn** for model development, this project makes it easy to visualize and understand different ML models.
 
@@ -87,22 +87,5 @@ streamlit run streamlit.py
 - **Mixture of Gaussians**
 - **Principal Component Analysis (PCA)**
 
-## 🤝 Contributing
-We welcome contributions to improve and expand this project! Follow these steps:
-
-1. **Fork the repository**.
-2. **Create a branch**:
-   ```bash
-   git checkout -b feature-branch
-   ```
-3. **Commit your changes**:
-   ```bash
-   git commit -m 'Add new feature'
-   ```
-4. **Push to the branch**:
-   ```bash
-   git push origin feature-branch
-   ```
-5. **Submit a pull request**.
 
 Thank you for exploring the **ML Playground**! If you have questions or feedback, feel free to open an issue. Enjoy exploring machine learning! 🧑‍💻
