@@ -1,8 +1,4 @@
-Here’s a README template for your **ML Playground** project on GitHub. This template includes colorful sections, clear instructions, and organized headers to highlight each aspect of your project.
-
----
-
-# 🤖 ML Playground
+ML Playground
 
 Welcome to the **ML Playground**! This project provides an interactive interface for exploring a range of popular machine learning algorithms for regression, classification, and clustering tasks. Built using **Streamlit** for the frontend and **scikit-learn** for model development, this project makes it easy to visualize and understand different ML models.
 
