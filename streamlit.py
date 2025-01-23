@@ -154,6 +154,7 @@ if model_type == "Classification":
 
             prediction = regression_model.predict(input_data)
             st.write(f"Predicted Outcome: {prediction[0]}")
+
     elif classification_method == "SVM":
         if st.button("Train Iris SVM Model"):
             msg = train_svm()
@@ -171,6 +172,7 @@ if model_type == "Classification":
             from CLASSIFICATION.SVM.svm_test import predict_model
             prediction = predict_model(input_data)
             st.write("Prediction:", prediction)
+
     elif classification_method == "KNN":
         if st.button("Train KNN Model"):
             message = train_knn()
@@ -276,9 +278,7 @@ elif model_type == "Regression":
             st.success(f"Predicted Spending Score: {prediction[0]:.2f}")
         
 
-        
 
-       
 
     elif regression_method == "Multiple Regression":
        
