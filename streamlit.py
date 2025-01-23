@@ -1,9 +1,13 @@
+from sklearn.mixture import GaussianMixture
 import streamlit as st
 import pickle
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-
+from sklearn.ensemble import GradientBoostingClassifier, GradientBoostingRegressor
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 
 # Handle unknown data
 
@@ -283,21 +287,24 @@ elif model_type == "Regression":
     elif regression_method == "Multiple Regression":
        
         from REGRESSION.MULTIPLEREGRESSION.mr_train import train_multiple_regression_model
+        import pickle
 
         DATA_PATH = 'Datasets/Students_Performance.csv'  
         target_column = 'Performance Index'  # Adjust to your actual target column
 
-        # Initialize a session state variable to track model training
+        # Initialize session state variables
         if 'model_trained' not in st.session_state:
             st.session_state.model_trained = False
             st.session_state.test_x = None
             st.session_state.test_y = None
             st.session_state.model = None
+            st.session_state.label_encoder = None  # Add this line
 
         # Train the Multiple Regression model
         if st.button("Train Multiple Regression Model"):
-            print("Training the model")
             test_x, test_y, model, mse, mae, r2, message = train_multiple_regression_model(DATA_PATH, target_column)
+            st.session_state.model = model  # Save the model to session state
+            st.session_state.label_encoder = pickle.load(open('Saved_models/label_encoder.pkl', 'rb'))  # Load the label encoder
             st.success(message)
 
             # Display evaluation metrics
@@ -306,30 +313,37 @@ elif model_type == "Regression":
             st.write(f"R² Score: {r2:.4f}")
 
         # Check if the model is trained
-        if 'test_x' in locals () and 'test_y' in locals():
+        if st.session_state.model is not None and st.session_state.label_encoder is not None:
             # Display input sliders and dropdowns for prediction input
             st.subheader("Test the model with custom input")
             user_input = {
                 'Hours Studied': st.slider("Hours Studied", min_value=0, max_value=100, value=50, step=1),
                 'Previous Scores': st.slider("Previous Scores", min_value=0, max_value=100, value=50, step=1),
-                'Extracurricular Activities': st.selectbox("Extracurricular Activities", ["Yes", "No"]),
+                'Extracurricular Activities': st.selectbox("Extracurricular Activities", [1, 0]),
                 'Sleep Hours': st.slider("Sleep Hours", min_value=0, max_value=24, value=8, step=1),
                 'Sample Question Papers Practiced': st.slider("Sample Question Papers Practiced", min_value=0, max_value=10, value=1, step=1)
             }
 
             if st.button("Predict with Custom Input"):
-                # Load model from session state
+                # Load model and label encoder from session state
                 multiple_regression_model = st.session_state.model
+                label_encoder = st.session_state.label_encoder
 
                 # Convert user input into DataFrame
                 input_df = pd.DataFrame([user_input])
 
-                # Encode categorical features (make sure to match the preprocessing done during training)
-                input_df['Extracurricular Activities'] = input_df['Extracurricular Activities'].map({"Yes": 1, "No": 0})
+                # Encode categorical features using the saved label encoder
+                if input_df['Extracurricular Activities'].values[0] in label_encoder.classes_:
+                    input_df['Extracurricular Activities'] = label_encoder.transform(input_df['Extracurricular Activities'])
 
-                # Predict the target variable using the corrected user input
-                prediction = multiple_regression_model.predict(input_df)
-                st.write(f"Predicted Performance Index: {prediction[0]:.3f}")
+                    # Make sure all other columns are in the correct format
+                    input_df = input_df.astype(float)  # Convert all columns to float if necessary
+
+                    # Predict the target variable using the corrected user input
+                    prediction = multiple_regression_model.predict(input_df)
+                    st.write(f"Predicted Performance Index: {prediction[0]:.3f}")
+                else:
+                    st.error("Invalid value for 'Extracurricular Activities'. Please select a valid option.")
 
     elif regression_method == "Decision Tree Regression":
         DATA_PATH = 'Datasets/SydneyHousePrices.csv'
@@ -400,7 +414,70 @@ elif model_type == "Regression":
                 ax.add_artist(legend1)
                 ax.legend()
                 st.pyplot(fig)
+    elif regression_method == "Gradient Boosting (Regression)":
+    # Configuration for regression
+        st.subheader("Gradient Boosting Regression Model Configuration")
+        data_path = "Datasets/diabetes.csv"  # Fixed path to the dataset
+        target_column = "Glucose"  # Change this to the target variable for regression
+        n_estimators = st.number_input("Number of Estimators for Regression", min_value=1, value=100)
+        max_depth = st.number_input("Max Depth for Regression", min_value=1, value=3)
+        learning_rate = st.number_input("Learning Rate for Regression", min_value=0.01, value=0.1)
 
+        if st.button("Train Gradient Boosting Regression Model"):
+            try:
+                # Load the dataset
+                df = pd.read_csv(data_path)
+
+                # Split the dataset into features and target
+                X = df.drop(columns=[target_column])
+                y = df[target_column]
+
+                # Split the data into training and testing sets
+                X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+                # Create and train the Gradient Boosting Regressor
+                model = GradientBoostingRegressor(n_estimators=n_estimators, max_depth=max_depth, learning_rate=learning_rate)
+                model.fit(X_train, y_train)
+
+                # Store the model in session state
+                st.session_state.model = model
+
+                # Make predictions on the test set
+                predictions = model.predict(X_test)
+
+                # Calculate regression metrics
+                mse = mean_squared_error(y_test, predictions)
+                mae = mean_absolute_error(y_test, predictions)
+                r2 = r2_score(y_test, predictions)
+
+                st.session_state.test_x = X_test
+                st.session_state.test_y = y_test
+                st.success("Model trained successfully!")
+                st.write(f"Model Mean Squared Error: {mse:.2f}")
+                st.write(f"Model Mean Absolute Error: {mae:.2f}")
+                st.write(f"Model R² Score: {r2:.2f}")
+            except ValueError as e:
+                st.error(str(e))
+
+        # Prediction input for regression
+        st.subheader("Make Regression Predictions")
+        if st.session_state.test_x is not None and st.session_state.test_y is not None:
+            feature_columns = st.session_state.test_x.columns.tolist()
+            user_input = {}
+            
+            for column in feature_columns:
+                user_input[column] = st.number_input(f"Enter value for {column}", value=0.0)
+
+            if st.button("Make Predictions"):
+                # Create a DataFrame from the user input
+                input_data = pd.DataFrame([user_input])
+
+                # Retrieve the model from session state and make predictions
+                model = st.session_state.model
+                predictions = model.predict(input_data)
+                st.write("Prediction:")
+                st.write(predictions[0])
+                
 elif model_type == "Clustering":
 
     # Dropdown for clustering methods
@@ -408,6 +485,9 @@ elif model_type == "Clustering":
         "DBSCAN Clustering", 
         "Spectral Clustering",
         "K-Medoids Clustering", 
+        "PCA",
+        "Spectral Clustering",
+        "Mixture of Gaussians",
         "PCA"        
     ])
 
@@ -627,3 +707,78 @@ elif model_type == "Clustering":
             ax.set_ylabel("Principal Component 2")
             ax.legend()
             st.pyplot(fig)
+            
+    elif clustering_method == "Mixture of Gaussians":
+        
+        from CLUSTERING.MixtureOfGuassians.mog_train import train_mog  # Import the training function
+        from CLUSTERING.MixtureOfGuassians.mog_test import predict_cluster  # Import the prediction function
+
+        # Initialize session state variables
+        if 'X' not in st.session_state:
+            st.session_state.X = None
+        if 'labels' not in st.session_state:
+            st.session_state.labels = None
+        if 'silhouette' not in st.session_state:
+            st.session_state.silhouette = None
+        if 'gmm' not in st.session_state:
+            st.session_state.gmm = None
+
+        # User inputs for MoG clustering
+        st.subheader("Cluster Configuration")
+        n_clusters = st.slider("Number of Clusters", min_value=1, max_value=10, value=2)
+        n_samples = st.number_input("Number of Samples", min_value=100, max_value=2000, value=1000)
+
+        if st.button("Train Mixture of Gaussians Model"):
+            # Ensure n_clusters and n_samples are defined
+            if n_clusters > 0 and n_samples > 0:
+                labels, silhouette, X = train_mog(n_clusters=n_clusters, n_samples=n_samples)
+
+                # Store results in session state
+                st.session_state.labels = labels
+                st.session_state.silhouette = silhouette
+                st.session_state.X = X
+
+                # Train the Gaussian Mixture Model and store it in session state
+                st.session_state.gmm = GaussianMixture(n_components=n_clusters, random_state=42)
+                st.session_state.gmm.fit(X)
+
+                st.success("Mixture of Gaussians model trained successfully!")
+                st.write(f"Silhouette Score: {silhouette:.2f}")
+
+                # Plot the clustered data
+                fig, ax = plt.subplots()
+                scatter = ax.scatter(X[:, 0], X[:, 1], c=labels, cmap='viridis')
+                ax.set_title("Mixture of Gaussians Clustering")
+                ax.set_xlabel("Feature 1")
+                ax.set_ylabel("Feature 2")
+                plt.colorbar(scatter, label='Cluster Label')
+                st.pyplot(fig)
+            else:
+                st.error("Please ensure that the number of clusters and samples are greater than zero.")
+
+        # Prediction input for a new point
+        st.subheader("Predict Cluster for New Data Point")
+        feature1 = st.number_input("Feature 1", value=0.0)
+        feature2 = st.number_input("Feature 2", value=0.0)
+
+        if st.button("Predict Cluster"):
+            if st.session_state.gmm is not None:  # Check if the model is trained
+                # Create a new point for prediction
+                new_point = np.array([[feature1, feature2]])  # Shape (1, 2) for a single sample
+
+                # Predict the cluster for the new point
+                predicted_cluster = st.session_state.gmm.predict(new_point)[0]
+                st.write(f"The new point ({feature1}, {feature2}) is assigned to cluster: {predicted_cluster}")
+
+                # Visualize the new point on the existing data scatter plot
+                fig, ax = plt.subplots()
+                scatter = ax.scatter(st.session_state.X[:, 0], st.session_state.X[:, 1], c=st.session_state.labels, cmap='viridis')
+                ax.scatter(feature1, feature2, color='red', label="New Point", s=100, edgecolor="black")
+                ax.set_title("Mixture of Gaussians Clustering with New Point")
+                ax.set_xlabel("Feature 1")
+                ax.set_ylabel("Feature 2")
+                plt.colorbar(scatter, label='Cluster Label')
+                ax.legend()
+                st.pyplot(fig)
+            else:
+                st.error("Please train the model before making a prediction.")
