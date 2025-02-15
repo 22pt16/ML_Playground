@@ -100,7 +100,6 @@ if model_type == "Classification":
         "SVM", 
         "Logistic Regression", 
         "Decision Tree Classifier",  
-        "Mixture of Gaussians"
         
     ])
 
@@ -249,8 +248,7 @@ elif model_type == "Regression":
     regression_method = st.selectbox("Select Regression Method", [
         "Linear Regression", 
         "Multiple Regression", 
-        "Decision Tree Regression", 
-        "Gradient Boosting (Regression)"
+        "Decision Tree Regression"
     ])
     
     if regression_method == "Linear Regression":
@@ -483,12 +481,9 @@ elif model_type == "Clustering":
     # Dropdown for clustering methods
     clustering_method = st.selectbox("Select Clustering Method", [ 
         "DBSCAN Clustering", 
-        "Spectral Clustering",
         "K-Medoids Clustering", 
-        "PCA",
-        "Spectral Clustering",
-        "Mixture of Gaussians",
-        "PCA"        
+        "PCA"
+       
     ])
 
     if clustering_method == "K-Medoids Clustering":
